@@ -108,7 +108,7 @@ class SubGroup:
         with open(filename, 'w') as fh:
             for group, results in self.sub_families.items():
                 for name in results:
-                    print >> fh, "%s\t%s" % (name, group)
+                    print >> fh, "%s\t%s\t%s" % (name, group, self.seqs_dict[name].sequence)
 
 if __name__ == "__main__":
     pass

@@ -3,6 +3,7 @@
 __author__ = 'julianzaugg'
 
 import numpy as np
+from itertools import chain
 
 class DistanceMatrix:
     """
@@ -80,6 +81,24 @@ class DistanceMatrix:
             lower.append(row)
         return lower
 
+    @staticmethod
+    def get_partial_dmatrix(current_dmatrix, exclude_idx):
+        """
+        Return a sub matrix from the full matrix, excluding specified row and column
+        :param exclude_idx: row/column index to exclude
+        :return: partial matrix
+        """
+        N = len(current_dmatrix)
+        # new_seqs = [current_dmatrix._seqs[i] for i in xrange(N) if i not in exclude_idx]
+        new_seqs = []
+        rows_idxs = []
+        for i in xrange(N):
+            if i not in exclude_idx:
+                new_seqs.append(current_dmatrix._seqs[i])
+                rows_idxs.append([i])
+        new_partial_matrix = DistanceMatrix(new_seqs, force_use_name=current_dmatrix.force_name)
+        new_partial_matrix.dist_matrix = current_dmatrix.dist_matrix[rows_idxs, list(chain(*rows_idxs))]
+        return new_partial_matrix
 
 def read_phylip(filename):
     """
@@ -108,6 +127,9 @@ def write_phylip(filename, distance_matrix):
         print >> fh, distance_matrix
 
 
+
+
+
 if __name__ == "__main__":
 
     import sequence
@@ -120,3 +142,5 @@ if __name__ == "__main__":
     dm[2] = 1
     dm[4][2] = 3
     print dm.dist_matrix
+    out = DistanceMatrix.get_partial_dmatrix(dm, [0,3])
+    print out

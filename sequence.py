@@ -376,7 +376,8 @@ def generate_logos(input_aln_dir, output_logo_path):
         inpath = input_aln_dir + alnFile
         outpath = output_logo_path + "%s" % alnFile.split(".")[0] + ".png"
         subprocess.call([WEBLOGO_EXE,"-f", inpath, "-F", "png_print", "-D", "clustal", "-o", outpath, "-t",
-                        name, "-A", "protein", "-Y", "yes", "--scale-width", "no", "--errorbars", "no", "-U", "bits"])
+                        name, "-A", "protein", "-Y", "yes", "--scale-width", "yes", "--errorbars", "no", "-U", "bits",
+                         "-c", "chemistry"])
 
 if __name__ == "__main__":
     filename = "/Users/julianzaugg/Documents/University/Phd/Projects/NES/Results/groups/Fastas/"
