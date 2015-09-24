@@ -7,7 +7,7 @@ import numpy
 import os
 import subprocess
 
-# from prob import *
+from prob import *
 
 class Sequence(object):
 
