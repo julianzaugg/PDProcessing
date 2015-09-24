@@ -106,6 +106,7 @@ class SubGroup:
         """
         assert self.sub_families, "Call 'find_sub_families' first"
         with open(filename, 'w') as fh:
+            print >> fh, "Name\tGroup\tSequence"
             for group, results in self.sub_families.items():
                 for name in results:
                     print >> fh, "%s\t%s\t%s" % (name, group, self.seqs_dict[name].sequence)

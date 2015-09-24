@@ -141,6 +141,7 @@ def process_args(input_parser, input_args):
             s_length = len(SEQUENCES[i])
             if s_length < min_length or s_length > max_length:
                 exclude_idxs.append(i)
+        assert len(exclude_idxs) != len(SEQUENCES), "All sequences were excluded, change length limit range"
         DISTANCE_MATRIX = dm.DistanceMatrix.get_partial_dmatrix(DISTANCE_MATRIX, exclude_idxs)
     print "Writing Distance matrix"
     dm.write_phylip(OUTPUT_DIR + "distance_matrix.txt", DISTANCE_MATRIX)
@@ -168,9 +169,5 @@ if __name__ == "__main__":
     parser.add_argument('-ll', '--limitlength', help='Limit processing to sequences of certain length;'
                                                      'Must be in format of "min,max"', required=False)
 
-    # INPUT="/Users/julianzaugg/Documents/University/Phd/Projects/NES/Results/LG_ordered/NES_0_200_distances.txt"
-    INPUT="/Users/julianzaugg/Documents/University/Phd/Projects/NES/Results/LG_ordered/NES_LG_ordered_final.txt"
-    OUTPUT="/Users/julianzaugg/Documents/University/Phd/Projects/NES/Results/LG_ordered/Results/"
-    args = parser.parse_args(["-i", INPUT, "-o", OUTPUT, "-ll", "10,20"])
-    # args = parser.parse_args()
+    args = parser.parse_args()
     process_args(parser, args)

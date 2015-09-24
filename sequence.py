@@ -361,10 +361,10 @@ def align_fasta_and_write(input_fasta_dir, output_aln_path):
     for ff in fasta_filenames:
         in_file = input_fasta_dir + ff
         _temp_in_seqs = read_fasta_file(in_file, Protein_Alphabet)
+        group = ff.split(".")[0]
         if len(_temp_in_seqs) == 1: # Yes we assume protein alphabet currently
             Alignment(_temp_in_seqs).write_clustal_file(output_aln_path + "%s_alignment.txt" % group)
             continue
-        group = ff.split(".")[0]
         out = subprocess.check_output([MAFFT_EXE, "--clustalout", "--quiet", in_file])
         with open(output_aln_path + "%s_alignment.txt" % group, "w") as fh:
             print >> fh, out
@@ -380,9 +380,4 @@ def generate_logos(input_aln_dir, output_logo_path):
                          "-c", "chemistry"])
 
 if __name__ == "__main__":
-    filename = "/Users/julianzaugg/Documents/University/Phd/Projects/NES/Results/groups/Fastas/"
-    import subgroup
-    sg = subgroup.SubGroup()
-    write_fasta_files("/Users/julianzaugg/Desktop/out_temp/fastas", )
-    align_fasta_and_write(filename, "/Users/julianzaugg/Desktop/out_temp/")
-    generate_logos("/Users/julianzaugg/Desktop/out_temp/", "/Users/julianzaugg/Desktop/out_temp/logos/")
+    pass
