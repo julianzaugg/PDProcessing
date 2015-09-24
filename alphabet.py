@@ -1,6 +1,3 @@
-"""
-This module was created by Mikael Boden.
-"""
 
 class Alphabet(object):
     """ Defines an immutable biological alphabet (e.g. the alphabet for DNA is AGCT) 
