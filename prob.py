@@ -12,9 +12,9 @@ from alphabet import *
 #################################################################################################
 
 def _getMeTuple(alphas, str):
-    """ Handy function that resolves what entries that are being referred to in the case 
-    of written wildcards etc. 
-    Example y = _getMeTuple([DNA_Alphabet, Protein_Alphabet], '*R') gives y = (None, 'R')  
+    """ Handy function that resolves what entries that are being referred to in the case
+    of written wildcards etc.
+    Example y = _getMeTuple([DNA_Alphabet, Protein_Alphabet], '*R') gives y = (None, 'R')
     alphas: the alphabets
     str: the string that specifies entries (may include '*' and '-' signifying any symbol) """
     assert len(str) == len(alphas), "Entry invalid"
@@ -32,18 +32,18 @@ def _getMeTuple(alphas, str):
 #################################################################################################
 # Distrib class
 #################################################################################################
-        
+
 class Distrib():
-    """ A class for a discrete probability distribution, defined over a specified "Alphabet" 
+    """ A class for a discrete probability distribution, defined over a specified "Alphabet"
         TODO: Fix pseudo counts
-              Exclude from counts, specify in constructor, 
+              Exclude from counts, specify in constructor,
               include only when computing probabilities by standard formula (n_a + pseudo_a * N^(1/2)) / (N + N^(1/2))
               Exclude from filesaves, include with filereads (optional)
     """
     def __init__(self, alpha, pseudo = 0.0):
         """ Construct a new distribution for a specified alphabet, using an optional pseudo-count.
         alpha: alphabet
-        pseudo: either a single "count" that applies to all symbols, OR a distribution/dictionary with counts. 
+        pseudo: either a single "count" that applies to all symbols, OR a distribution/dictionary with counts.
         """
         self.pseudo = pseudo or 0.0
         self.alpha = alpha
@@ -51,7 +51,7 @@ class Distrib():
         try: # assume pseudo is a dictionary or a Distrib itself
             self.tot = 0
             symndx = 0
-            for sym in alpha: 
+            for sym in alpha:
                 cnt = float(pseudo[sym])
                 self.cnt[symndx] = cnt
                 self.tot = self.tot + cnt
@@ -59,7 +59,7 @@ class Distrib():
         except TypeError: # assume pseudo is a single count for each symbol
             self.cnt = [float(self.pseudo) for _ in alpha]
             self.tot = float(self.pseudo) * len(alpha) # track total counts (for efficiency)
-        
+
     def observe(self, sym, cntme = 1.0):
         """ Make an observation of a symbol
         sym: symbol that is being observed
@@ -69,8 +69,8 @@ class Distrib():
         self.cnt[ndx] = self.cnt[ndx] + cntme
         self.tot = self.tot + cntme
         return
-    
-    def reset(self):    
+
+    def reset(self):
         """ Re-set the counts of this distribution. Pseudo-counts are re-applied. """
         try:
             self.tot = 0
@@ -90,7 +90,7 @@ class Distrib():
         for sym in new_alpha:
             d.observe(sym, self.cnt[self.alpha.index(sym)])
         return d
-    
+
     def count(self, sym = None):
         """ Return the absolute count(s) of the distribution
             or the count for a specified symbol. """
@@ -111,26 +111,26 @@ class Distrib():
             cnt = distrib.count(self.alpha[i])
             self.cnt[i] += cnt
             self.tot += cnt
-    
+
     def subtract(self, distrib):
         """ Subtract the counts for the provided distribution from the present. """
         for i in range(len(self.cnt)):
             cnt = distrib.count(self.alpha[i])
             self.cnt[i] -= cnt
             self.tot -= cnt
-        
+
     def getSymbols(self):
         return self.alpha.symbols
-    
+
     def __getitem__(self, sym):
         """ Retrieve the probability of a symbol (ascertained by counts incl pseudo-counts) """
         if self.tot > 0.0:
             return self.count(sym) / self.tot
         else:
             return 1.0 / len(self.alpha) # uniform
-    
+
     def prob(self, sym = None):
-        """ Retrieve the probability of a symbol OR the probabilities of all symbols 
+        """ Retrieve the probability of a symbol OR the probabilities of all symbols
         (listed in order of the alphabet index). """
         if sym != None:
             return self.__getitem__(sym)
@@ -141,7 +141,7 @@ class Distrib():
 
     def __iter__(self):
         return self.alpha
-    
+
     def __str__(self):
         """ Return a readable representation of the distribution """
         str = '< '
@@ -150,7 +150,7 @@ class Distrib():
         return str + ' >'
 
     def swap(self, sym1, sym2):
-        """ Swap the entries for specified symbols. Useful for reverse complement etc. 
+        """ Swap the entries for specified symbols. Useful for reverse complement etc.
             Note that changes are made to the current instance. Use swapxcopy if you
             want to leave this instance intact. """
         sym1ndx = self.alpha.index(sym1)
@@ -160,16 +160,16 @@ class Distrib():
         self.cnt[sym2ndx] = tmpcnt
 
     def swapxcopy(self, sym1, sym2):
-        """ Create a new instance with swapped entries for specified symbols. 
-            Useful for reverse complement etc. 
-            Note that changes are NOT made to the current instance. 
+        """ Create a new instance with swapped entries for specified symbols.
+            Useful for reverse complement etc.
+            Note that changes are NOT made to the current instance.
             Use swap if you want to modify this instance. """
         newdist = Distrib(self.alpha, self.count())
         newdist.swap(sym1, sym2)
         return newdist
-    
-    def write_distrib(self, filename = None):
-        """ Write the distribution to a file or string. 
+
+    def writeDistrib(self, filename = None):
+        """ Write the distribution to a file or string.
             Note that the total number of counts is also saved, e.g.
             * 1000 """
         str = ''
@@ -189,7 +189,7 @@ class Distrib():
         q = 0.0
         for sym in alpha: # pick a symbol with a frequency proportional to its probability
             q = q + self[sym]
-            if p < q: 
+            if p < q:
                 return sym
         return alpha[len(alpha)]
 
@@ -202,9 +202,9 @@ class Distrib():
                 maxsym = sym
                 maxprob = self[sym]
         return maxsym
-    
+
     def divergence(self, distrib2):
-        """ Calculate the Kullback-Leibler divergence between two discrete distributions. 
+        """ Calculate the Kullback-Leibler divergence between two discrete distributions.
             Note that when self.prob(x) is 0, the divergence for x is 0.
             When distrib2.prob(x) is 0, it is replaced by 0.0001.
         """
@@ -230,25 +230,25 @@ class Distrib():
             sum +=  p * math.log(p, base)
         return -sum
 
-def write_distribs(distribs, filename):
+def writeDistribs(distribs, filename):
     """ Write a list/set of distributions to a single file. """
     str = ''
     k = 0
     for d in distribs:
-        str += "[%d]\n%s" % (k, d.write_distrib())
+        str += "[%d]\n%s" % (k, d.writeDistrib())
         k += 1
     fh = open(filename, 'w')
     fh.write(str)
     fh.close()
 
-def _read_distrib(linelist):
+def _readDistrib(linelist):
     """ Extract distribution from a pre-processed list if strings. """
     symstr = ''
     d = {}
     for line in linelist:
         line = line.strip()
         if len(line) == 0 or line.startswith('#'):
-            continue            
+            continue
         sections = line.split()
         sym, value = sections[0:2]
         if len(sym) == 1:
@@ -270,10 +270,10 @@ def _read_distrib(linelist):
     distrib = Distrib(alpha, d)
     return distrib
 
-def read_distribs(filename):
-    """ Load a list of distributions from file. 
+def readDistribs(filename):
+    """ Load a list of distributions from file.
     Note that if a row contains '* <number>' then it is assumed that each probability
-    associated with the specific distribution is based on <number> counts. """  
+    associated with the specific distribution is based on <number> counts. """
     fh = open(filename)
     string = fh.read()
     distlist = []
@@ -282,7 +282,7 @@ def read_distribs(filename):
         line = line.strip()
         if line.startswith('['):
             if len(linelist) != 0:
-                distlist.append(_read_distrib(linelist))
+                distlist.append(_readDistrib(linelist))
             linelist = []
         elif len(line) == 0 or line.startswith('#'):
             pass # comment or blank line --> ignore
@@ -290,21 +290,21 @@ def read_distribs(filename):
             linelist.append(line)
     # end for-loop, reading the file
     if len(linelist) != 0:
-        distlist.append(_read_distrib(linelist))
+        distlist.append(_readDistrib(linelist))
     fh.close()
     return distlist
 
-def read_distrib(filename):
-    """ Load a distribution from file. 
+def readDistrib(filename):
+    """ Load a distribution from file.
     Note that if a row contains '* <number>' then it is assumed that each probability
-    is based on <number> counts. """  
-    dlist = read_distribs(filename)
+    is based on <number> counts. """
+    dlist = readDistribs(filename)
     if len(dlist) > 0:  # if at least one distribution was in the file...
         return dlist[0] # return the first
 
 import re
 
-def _read_multi_counts(linelist, format = 'JASPAR'):
+def _readMultiCount(linelist, format = 'JASPAR'):
     ncol = 0
     symcount = {}
     if format == 'JASPAR':
@@ -333,7 +333,7 @@ def _read_multi_counts(linelist, format = 'JASPAR'):
         raise RuntimeError('Unsupported format: ' + format)
     return distribs
 
-def read_multi_counts(filename, format = 'JASPAR'):
+def readMultiCounts(filename, format = 'JASPAR'):
     """ Read a file of raw counts for multiple distributions over the same set of symbols
         for (possibly) multiple (named) entries.
         filename: name of file
@@ -354,18 +354,18 @@ def read_multi_counts(filename, format = 'JASPAR'):
         if len(row) < 1: continue
         if row.startswith('>'):
             if len(linelist) > 0:
-                entries[entryname] = _read_multi_counts(linelist, format=format)
+                entries[entryname] = _readMultiCount(linelist, format=format)
                 linelist = []
             entryname = row[1:].split()[0]
         else:
             linelist.append(row)
     if len(linelist) > 0:
-        entries[entryname] = _read_multi_counts(linelist, format=format)
+        entries[entryname] = _readMultiCount(linelist, format=format)
     fh.close()
     return entries
 
-def read_multi_counts(filename, format = 'JASPAR'):
-    """ Read a file of raw counts for multiple distributions over the same set of symbols. 
+def readMultiCount(filename, format = 'JASPAR'):
+    """ Read a file of raw counts for multiple distributions over the same set of symbols.
         filename: name of file
         format: format of file, default is 'JASPAR' exemplified below
         A  [1423  708 2782    0 4000   27 3887 3550  799 1432 1487 ]
@@ -374,7 +374,7 @@ def read_multi_counts(filename, format = 'JASPAR'):
         T  [ 775  424 1177    0    0 3835  107   63  224  311  585 ]
         returns a list of Distrib's
     """
-    d = read_multi_counts(filename, format=format)
+    d = readMultiCounts(filename, format=format)
     if len(d) > 0:
         return d.values()[0]
 
@@ -383,13 +383,13 @@ def read_multi_counts(filename, format = 'JASPAR'):
 #################################################################################################
 
 class Joint(object):
-    """ A joint probability class. 
-        The JP is represented as a distribution over n-tuples where n is the number of variables. 
-        Variables can be for any defined alphabet. The size of each alphabet determine the 
+    """ A joint probability class.
+        The JP is represented as a distribution over n-tuples where n is the number of variables.
+        Variables can be for any defined alphabet. The size of each alphabet determine the
         number of entries in the table (with probs that add up to 1.0) """
-        
+
     def __init__(self, alphas):
-        """ A distribution of n-tuples. 
+        """ A distribution of n-tuples.
         alphas: Alphabet(s) over which the distribution is defined
         """
         if type(alphas) is Alphabet:
@@ -407,13 +407,13 @@ class Joint(object):
 
     def __iter__(self):
         return self.store.__iter__()
-    
+
     def reset(self):
         """ Re-set the counts of this joint distribution. Pseudo-counts are re-applied. """
         for entry in self.store:
             self.store[entry] = None
         self.totalCnt = 0
-        
+
     def observe(self, key, cnt = 1):
         """ Make an observation of a tuple/key
         key: tuple that is being observed
@@ -425,7 +425,7 @@ class Joint(object):
             if (score == None):
                 score = 0
             self.totalCnt += cnt
-            self.store[key] = score + cnt  
+            self.store[key] = score + cnt
         else: # there are wildcards in the key
             allkeys = [mykey for mykey in self.store.getAll(key)]
             mycnt = float(cnt)/float(len(allkeys))
@@ -434,9 +434,9 @@ class Joint(object):
                 score = self.store[mykey]
                 if (score == None):
                     score = 0
-                self.store[mykey] = score + mycnt  
+                self.store[mykey] = score + mycnt
         return
-    
+
     def count(self, key):
         """ Return the absolute count that is used for the joint probability table. """
         key = _getMeTuple(self.alphas, key)
@@ -448,10 +448,10 @@ class Joint(object):
                 if y != None:
                     score += y
         return score
-    
+
     def __getitem__(self, key):
         """ Determine and return the probability of a specified expression of the n-tuple
-        which can involve "wildcards" 
+        which can involve "wildcards"
         Note that no assumptions are made regarding independence. """
         key = _getMeTuple(self.alphas, key)
         score = self.store[key]
@@ -480,7 +480,7 @@ class Joint(object):
 
     def items(self, sort = False):
         """ In a dictionary-like way return all entries as a list of 2-tuples (key, prob).
-        If sort is True, entries are sorted in descending order of probability. 
+        If sort is True, entries are sorted in descending order of probability.
         Note that this function should NOT be used for big (>5 variables) tables."""
         if self.totalCnt == 0.0:
             return []
@@ -491,13 +491,13 @@ class Joint(object):
         if sort:
             return sorted(ret, key=lambda v: v[1], reverse=True)
         return ret
-        
+
 
 class IndepJoint(Joint):
-    
+
     def __init__(self, alphas, pseudo = 0.0):
-        """ A distribution of n-tuples. 
-        All positions are assumed to be independent. 
+        """ A distribution of n-tuples.
+        All positions are assumed to be independent.
         alphas: Alphabet(s) over which the distribution is defined
         """
         self.pseudo = pseudo
@@ -508,14 +508,14 @@ class IndepJoint(Joint):
         else:
             self.alphas = tuple( alphas )
         self.store = [Distrib(alpha, pseudo) for alpha in self.alphas]
-    
+
     def getN(self):
         """ Retrieve the number of distributions/random variables. """
         return len(self.alphas)
-    
+
     def __iter__(self):
         return TupleStore(self.alphas).__iter__()
-    
+
     def reset(self):
         """ Re-set the counts of each distribution. Pseudo-counts are re-applied. """
         self.store = [Distrib(alpha, self.pseudo) for alpha in self.alphas]
@@ -539,10 +539,10 @@ class IndepJoint(Joint):
                 if (score == None):
                     score = 0
                 self.store[i].observe(subkey, cnt)
-    
+
     def __getitem__(self, key):
         """ Determine and return the probability of a specified expression of the n-tuple
-        which can involve "wildcards" 
+        which can involve "wildcards"
         Note that variables are assumed to be independent. """
         assert len(key) == len(self.store), "Number of symbols must agree with the number of positions"
         prob = 1.0
@@ -553,14 +553,14 @@ class IndepJoint(Joint):
             else:
                 prob *= self.store[i][mykey]
         return prob
-    
+
     def get(self, sym, pos):
         """ Retrieve the probability of a specific symbol at a specified position. """
         mystore = self.store[pos]
         return mystore[sym]
-    
+
     def getColumn(self, column, count = False):
-        """ Retrieve all the probabilities (or counts) for a specified position. 
+        """ Retrieve all the probabilities (or counts) for a specified position.
             Returns values as a dictionary, with symbol as key."""
         d = {}
         for a in self.alphas[column]:
@@ -569,9 +569,9 @@ class IndepJoint(Joint):
             else: # probability
                 d[a] = self.store[column][a]
         return d
-    
+
     def getRow(self, sym, count = False):
-        """ Retrieve the probabilities (or counts) for a specific symbol over all columns/positions. 
+        """ Retrieve the probabilities (or counts) for a specific symbol over all columns/positions.
             Returns a list of values in the order of the variables/alphabets supplied to the constructor. """
         d = []
         for store in self.store:
@@ -580,7 +580,7 @@ class IndepJoint(Joint):
             else: # probability
                 d.append(store[sym])
         return d
-        
+
     def getMatrix(self, count = False):
         """ Retrieve the full matrix of probabilities (or counts) """
         d = {}
@@ -618,7 +618,7 @@ class IndepJoint(Joint):
 
     def items(self, sort = False):
         """ In a dictionary-like way return all entries as a list of 2-tuples (key, prob).
-        If sort is True, entries are sorted in descending order of probability. 
+        If sort is True, entries are sorted in descending order of probability.
         Note that this function should NOT be used for big (>5 variables) tables."""
         tstore = TupleStore(self.alphas)
         ret = []
@@ -638,10 +638,10 @@ class IndepJoint(Joint):
         return ret
 
 class NaiveBayes():
-    """ NaiveBayes implements a classifier: a model defined over a class variable 
-        and conditional on a list of discrete feature variables. 
+    """ NaiveBayes implements a classifier: a model defined over a class variable
+        and conditional on a list of discrete feature variables.
         Note that feature variables are assumed to be independent. """
-            
+
     def __init__(self, inputs, output, pseudo_input = 0.0, pseudo_output = 0.0):
         """ Initialise a classifier.
             inputs: list of alphabets that define the values that input variables can take.
@@ -654,12 +654,12 @@ class NaiveBayes():
             self.inputs = inputs
         else:
             self.inputs = tuple( inputs )
-        self.condprobs = {}   # store conditional probabilities as a dictionary (class is key) 
+        self.condprobs = {}   # store conditional probabilities as a dictionary (class is key)
         for outsym in output: # GIVEN the class
             # for each input variable initialise a conditional probability
             self.condprobs[outsym] = [ Distrib(input, pseudo_input) for input in self.inputs ]
         self.classprob = Distrib(output, pseudo_output) # the class prior
-    
+
     def observe(self, inpseq, outsym):
         """ Record an observation of an input sequence of feature values that belongs to a class.
             inpseq: sequence/list of feature values, e.g. 'ATG'
@@ -682,4 +682,15 @@ class NaiveBayes():
         return out
 
 if __name__=='__main__': # examples to run unless this module is merely "imported"
-    pass
+
+    jp = Joint([DNA_Alphabet, DNA_Alphabet])
+    jp.observe('AC', 2)
+    jp.observe('A*', 3)
+
+    pseudo = {'A':1,'C':2,'G':5,'T':3}
+    d = Distrib(DNA_Alphabet, pseudo)
+    d.observe('A', 3)
+
+    ijp = IndepJoint([DNA_Alphabet, DNA_Alphabet], pseudo = 1.0)
+    ijp.observe('AC')
+
