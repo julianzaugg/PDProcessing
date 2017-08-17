@@ -23,7 +23,7 @@ DISTANCE_MATRIX = None
 PD_INPUT_FILENAME = None
 OUTPUT_DIR = None
 
-def load_data(input_filename):
+def _load_data(input_filename):
     global SEQUENCES
     global DISTANCE_MATRIX
     # Create Annotation object
@@ -52,7 +52,7 @@ def load_data(input_filename):
     #Create Distance matrix
     DISTANCE_MATRIX = _dm_from_pd_output(seqs, distances)
 
-def create_tree():
+def _create_tree():
     global TREE
     TREE = tc.UPGMA(DISTANCE_MATRIX)
     TREE.calculate_tree()
@@ -79,7 +79,7 @@ def _dm_from_pd_output(seqs, distances):
         cnt += 1
     return dist_matrix
 
-def is_valid_file(parser, arg):
+def _is_valid_file(parser, arg):
     """Check if arg is a valid file that already exists on the file
        system.
     """
@@ -94,17 +94,17 @@ def _dir_check(directory):
         os.makedirs(directory)
 
 def _make_subfolders(out_dir, clean_dirs=True):
+    # FIXME - add ignore_errors = True
     if clean_dirs:
-        shutil.rmtree(out_dir + "/Fastas/")
-        shutil.rmtree(out_dir + "/Alignments/")
-        shutil.rmtree(out_dir + "/Logos/")
+        shutil.rmtree(out_dir + "/Fastas/", ignore_errors=True)
+        shutil.rmtree(out_dir + "/Alignments/", ignore_errors=True)
+        shutil.rmtree(out_dir + "/Logos/", ignore_errors=True)
     if not os.path.exists(out_dir + "/Fastas/"):
         os.makedirs(out_dir + "/Fastas/")
     if not os.path.exists(out_dir + "/Alignments/"):
         os.makedirs(out_dir + "/Alignments/")
     if not os.path.exists(out_dir + "/Logos/"):
         os.makedirs(out_dir + "/Logos/")
-
 
 def _get_group_sequences():
     sg = subgroup.SubGroup(SEQUENCES, OUTPUT_DIR + "tree.txt")
@@ -120,17 +120,13 @@ def process_args(input_parser, input_args):
     global OUTPUT_DIR
     global DISTANCE_MATRIX
     global SEQUENCES
-    is_valid_file(input_parser, input_args.input)
+    _is_valid_file(input_parser, input_args.input)
     PD_INPUT_FILENAME = input_args.input
     _dir_check(input_args.output)
     OUTPUT_DIR = input_args.output
     _make_subfolders(OUTPUT_DIR)
-    # if input_args.distancematrix and input_args.tree:
-    #     DISTANCE_MATRIX = dm.read_phylip(input_args.distancematrix)
-    #     TREE
-    # else:
     print "Loading data and creating distance matrix"
-    load_data(PD_INPUT_FILENAME)
+    _load_data(PD_INPUT_FILENAME)
     if input_args.limitlength:
         print "Extracting partial distance matrix using length limits"
         _ll = input_args.limitlength.split(',')
@@ -145,8 +141,9 @@ def process_args(input_parser, input_args):
         DISTANCE_MATRIX = dm.DistanceMatrix.get_partial_dmatrix(DISTANCE_MATRIX, exclude_idxs)
     print "Writing Distance matrix"
     dm.write_phylip(OUTPUT_DIR + "distance_matrix.txt", DISTANCE_MATRIX)
+    dm.write_full(OUTPUT_DIR + "distance_matrix_full.txt", DISTANCE_MATRIX)
     print "Creating Tree"
-    create_tree()
+    _create_tree()
     print "Writing Tree"
     TREE.write_tree(OUTPUT_DIR + "tree.txt")
     print "Identifying subgroups"
@@ -157,7 +154,12 @@ def process_args(input_parser, input_args):
     print "Writing group fastas"
     sequence.write_fasta_files(OUTPUT_DIR + "Fastas/", groups)
     print "Aligning sequence groups and writing clustal files"
-    sequence.align_fasta_and_write(OUTPUT_DIR + "Fastas/", OUTPUT_DIR + "Alignments/")
+    sequence.align_fasta_and_write(OUTPUT_DIR + "Fastas/", OUTPUT_DIR + "Alignments/", method=input_args.alignmethod)
+    if input_args.alignmethod == "CLUSTAL":
+        # Temp fix, clustal generate tree files for each fasta. These need to be removed.
+        filelist = [f for f in os.listdir(OUTPUT_DIR + "Fastas/") if f.endswith(".dnd")]
+        for f in filelist:
+            os.remove(OUTPUT_DIR + "Fastas/" + f)
     print "Generating Logos"
     sequence.generate_logos(OUTPUT_DIR + "Alignments/", OUTPUT_DIR + "Logos/")
 
@@ -168,6 +170,7 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--output', help='Output location for all results', required=False, default="./")
     parser.add_argument('-ll', '--limitlength', help='Limit processing to sequences of certain length;'
                                                      'Must be in format of "min,max"', required=False)
-
+    parser.add_argument('-am', '--alignmethod', help='Alignment method to use, either CLUSTAL or MAFFT',
+                                                                required=False, default="CLUSTAL")
     args = parser.parse_args()
     process_args(parser, args)

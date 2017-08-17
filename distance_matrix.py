@@ -126,6 +126,16 @@ def write_phylip(filename, distance_matrix):
     with open(filename, 'w') as fh:
         print >> fh, distance_matrix
 
+def write_full(filename, distance_matrix):
+    """
+    Write phylip formatted distance matrix to file
+    :param filename:
+    :return:
+    """
+    assert isinstance(distance_matrix, DistanceMatrix), "Provided distance matrix must be of type DistanceMatrix"
+    with open(filename, 'w') as fh:
+        print >> fh, "\n".join(["\t".join(map(str,r)) for r in distance_matrix])
+
 
 
 
@@ -142,5 +152,6 @@ if __name__ == "__main__":
     dm[2] = 1
     dm[4][2] = 3
     print dm.dist_matrix
-    out = DistanceMatrix.get_partial_dmatrix(dm, [0,3])
-    print out
+    # write_full("", dm)
+    # out = DistanceMatrix.get_partial_dmatrix(dm, [0,3])
+    # print out

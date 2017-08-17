@@ -7,6 +7,7 @@ require - Biopython
 __author__ = 'julianzaugg'
 
 # TODO provide option to store all possible groups for each sequence, rather than largest inclusive
+# TODO Investigate improvement of algorithm to better identify subgroups. Currently not separating accurately enough.
 
 from Bio import Phylo
 
@@ -59,7 +60,7 @@ class SubGroup:
                 parent = parents[q]
                 p_count = parent.count_terminals()
                 leaf_count = q.count_terminals()
-                J = float(p_count -leaf_count) / leaf_count
+                J = float(p_count - leaf_count) / leaf_count
                 if J > I:
                     I = J
                     subfamily = q
@@ -76,6 +77,8 @@ class SubGroup:
             for other_family in families:
                 of_tree = families[other_family][1]
                 of_tree_size = len(families[other_family][0])
+                # If the current family subtree includes the `other' family tree, then we don't consider the
+                # other family as an individual group and mark it for removal
                 if f_tree.is_parent_of(of_tree) and of_tree_size < f_tree_size:
                     remove_these.add(other_family)
         new_families = dict()

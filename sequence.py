@@ -247,7 +247,7 @@ class PWM(object):
         background: must be a Distrib instance or None (in which case a uniform background will be used)
         Specify only a section of the matrix to use with start and end. """
         if isinstance(foreground, Alignment):
-            foreground = foreground.getProfile(pseudo=pseudo)
+            foreground = foreground.get_profile(pseudo=pseudo)
         if isinstance(foreground, IndepJoint):
             foreground = foreground.store
         self.start = start
@@ -324,11 +324,39 @@ class PWM(object):
             (maxscore, maxindex) """
         maxscore = 0.0
         maxindex = 0.0
-        for i in range(len(sequence)-self.length+1):
+        s_length = len(sequence)
+        explore_range = xrange(s_length - self.length+1)
+        # sub_seqs = []
+        # ndxseqs = []
+        # for i in explore_range:
+        #     sub_seq = sequence[i:i + self.length]
+        #     sub_seqs.append(sub_seq)
+        #     ndxseq = []
+        #     ndx_cnt = 0
+        #     for sym in sub_seq:
+        #         ndxseq.append(self.alphabet.index(sym))
+        #         ndx_cnt += 1
+        #     ndxseqs.append((ndxseq, ndx_cnt))
+        # for sub_seq_idx in xrange(len(sub_seqs)):
+        #     score = 0.0
+        #     for w in xrange(ndxseqs[sub_seq_idx][1]):
+        #         score += self.m[ndxseqs[sub_seq_idx][0][w]][w]
+        #         # score += self.m[ndxseq[w]][w]
+        #     if maxscore is None:
+        #         maxscore = score
+        #         maxindex = i
+        #     elif maxscore < score:
+        #         maxscore = score
+        #         maxindex = i
+        # return maxscore, maxindex
+
+        # sub_seqs = [sequence[i:i + self.length] for i in explore_range]
+        # ndxseqs = [self.alphabet.index(sym) for sym in sub_seqs[i] for i in explore_range]
+        for i in explore_range:
             subseq = sequence[i:i + self.length]
-            ndxseq = [ self.alphabet.index(sym) for sym in subseq]
+            ndxseq = [self.alphabet.index(sym) for sym in subseq]
             score = 0.0
-            for w in range(len(ndxseq)):
+            for w in xrange(len(ndxseq)):
                 score += self.m[ndxseq[w]][w]
             if maxscore is None:
                 maxscore = score
@@ -343,6 +371,7 @@ class PWM(object):
 # Specify location of logo and alignment executables, currently assumes installed to path
 WEBLOGO_EXE = "weblogo"
 MAFFT_EXE = "mafft"
+CLUSTAL_EXE = "clustalw2"
 
 def write_fasta_files(output_fasta_path, seq_iterable):
     if type(seq_iterable) is dict:
@@ -356,7 +385,7 @@ def write_fasta_files(output_fasta_path, seq_iterable):
     else:
         raise Exception("seq_iterable must be a dictionary or nested list")
 
-def align_fasta_and_write(input_fasta_dir, output_aln_path):
+def align_fasta_and_write(input_fasta_dir, output_aln_path, method = "CLUSTAL"):
     fasta_filenames = [n for n in os.listdir(input_fasta_dir) if n.endswith(".txt")]
     for ff in fasta_filenames:
         in_file = input_fasta_dir + ff
@@ -365,9 +394,20 @@ def align_fasta_and_write(input_fasta_dir, output_aln_path):
         if len(_temp_in_seqs) == 1: # Yes we assume protein alphabet currently
             Alignment(_temp_in_seqs).write_clustal_file(output_aln_path + "%s_alignment.txt" % group)
             continue
-        out = subprocess.check_output([MAFFT_EXE, "--clustalout", "--quiet", in_file])
-        with open(output_aln_path + "%s_alignment.txt" % group, "w") as fh:
-            print >> fh, out
+        # out = subprocess.check_output([MAFFT_EXE, "--clustalout", "--quiet", "--maxiterate", "1000", in_file])
+        # out = subprocess.check_output([MAFFT_EXE, "--clustalout","--genafpair", "--maxiterate", "1000", "--quiet", in_file])
+        # out = subprocess.check_output([MAFFT_EXE, "--clustalout", "--globalpair", "--maxiterate", "1000", '--op', "100", "--quiet", in_file])
+        if method not in ["CLUSTAL", "MAFFT"]:
+            print "Invalid alignment method specified, defaulting to CLUSTAL"
+            method = "CLUSTAL"
+        if method == "CLUSTAL":
+            out_loc = output_aln_path + "%s_alignment.txt" % group
+            subprocess.call(["%s -INFILE=%s -GAPOPEN=100 -QUIET -OUTFILE=%s" % (CLUSTAL_EXE, in_file, out_loc)],
+                            shell=True)
+        elif method == "MAFFT":
+            out = subprocess.check_output([MAFFT_EXE, "--clustalout", "--maxiterate", "1000", "--quiet", in_file])
+            with open(output_aln_path + "%s_alignment.txt" % group, "w") as fh:
+                print >> fh, out
 
 def generate_logos(input_aln_dir, output_logo_path):
     aln_filenames = [n for n in os.listdir(input_aln_dir) if n.endswith(".txt")]
@@ -380,4 +420,10 @@ def generate_logos(input_aln_dir, output_logo_path):
                          "-c", "chemistry"])
 
 if __name__ == "__main__":
-    pass
+    seqs = read_fasta_file("/Users/julianzaugg/Documents/University/Phd/Projects/NES/Data/NES_fasta.txt", Protein_Alphabet)
+    # print ",".join(map(str,sorted([len(s) for s in seqs])))
+    a = sorted([len(s) for s in seqs])
+    b = [1 for i in xrange(len(seqs))]
+
+    for x,y in zip(a,b):
+        print "%i\t%i" % (x,y)
